@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER commit — contains DB passwords, API keys)
+.env
+
+# Uploaded files (user-generated, stored on Cloudinary in production)
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+dummy.jpg
+update_social.js

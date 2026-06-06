@@ -3,20 +3,43 @@ node_modules/
 
 # Environment variables (NEVER commit — contains DB passwords, API keys)
 .env
+.env.local
+.env.*.local
 
-# Uploaded files (user-generated, stored on Cloudinary in production)
-uploads/
+# Build output
+dist/
+dist-ssr/
 
 # Logs
+logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Temp files
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Uploads (user-generated content)
+backend/uploads/
+uploads/
+
+# Temporary files
+*.tmp
 dummy.jpg
 update_social.js
 
 .vercel
+
+backend.zip
+frontend.zip
