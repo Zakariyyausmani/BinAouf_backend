@@ -1,13 +1,3 @@
 {
-  "experimentalServices": {
-    "frontend": {
-      "src": "frontend",
-      "framework": "vite"
-    },
-    "backend": {
-      "src": "backend",
-      "entrypoint": "backend/server.js",
-      "runtime": "nodejs20.x"
-    }
-  }
+  "version": 2
 }
