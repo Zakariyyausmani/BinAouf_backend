@@ -38,6 +38,10 @@ app.use('/api/upload', uploadRoutes);
 // Static folder for images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now() });
+});
 // Base route
 app.get('/', (req, res) => {
   res.send('Bin Aouf API is running...');

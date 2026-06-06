@@ -1,6 +1,6 @@
 {
   "name": "bin-aouf-backend",
-  "engines": { "node": "24.x" },
+  "engines": { "node": "20.x" },
   "description": "Bin Aouf Himalayan Salt Exporter — Backend API",
   "main": "server.js",
   "scripts": {
