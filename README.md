@@ -163,5 +163,5 @@ EMAIL_TO=binaoufchemicals.pk@gmail.com
 **Bin Aouf Chemicals** | Khushab, Punjab, Pakistan
 binaoufchemicals.pk@gmail.com | +92 311 028 2668
 ## 📈 Monitoring
-- **API health**: `GET https://<backend-url>/api/health` returns `{ "status":"ok", "timestamp":<ms> }`.
+- **API health**: `GET https://roman-project-backend.vercel.app/api/health` returns `{ "status":"ok", "timestamp":<ms> }`.
 - Use this endpoint in uptime monitors (UptimeRobot, StatusCake, etc.).
