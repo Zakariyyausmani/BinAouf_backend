@@ -24,6 +24,21 @@ const app = express();
 
 // Middlewares
 app.use(cors());
+
+// -----------------------------------------------------------------
+// Explicit CORS headers for Vercel deployment
+// Adjust the origin if the frontend URL changes
+const FRONTEND_ORIGIN = 'https://bin-aouf-frontend.vercel.app';
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+// -----------------------------------------------------------------
 app.use(express.json());
 
 // API Routes
