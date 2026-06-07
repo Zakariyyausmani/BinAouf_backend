@@ -17,9 +17,6 @@ const testimonialRoutes = require('./routes/testimonialRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const path = require('path');
 
-// Connect to Database
-connectDB();
-
 const app = express();
 
 // ----- CORS configuration ---------------------------------------------------
@@ -44,6 +41,17 @@ const corsOptions = {
 app.use(cors(corsOptions));
 // -----------------------------------------------------------------
 app.use(express.json());
+
+// Ensure DB is connected before handling any API routes (Crucial for Vercel Serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection failed", error);
+    res.status(500).json({ message: "Database connection failed", error: error.message });
+  }
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
