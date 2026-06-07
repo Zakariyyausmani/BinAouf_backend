@@ -40,9 +40,9 @@ const Navbar = () => {
 
       {/* Main Navigation */}
       <nav id="mainNav" className={`${isSolid ? 'solid' : 'transparent'} ${location.pathname === '/' ? 'home-nav' : 'inner-nav'}`}>
-        <Link to="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+        <Link to="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '0px', textDecoration: 'none' }}>
           <img src="/logo.png" alt="Bin Aouf Logo" style={{ height: '55px', width: 'auto' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: '-15px' }}>
             <span className="logo-text-main">Bin Aouf</span>
             <span className="logo-text-sub">Chemicals</span>
           </div>
