@@ -21,7 +21,7 @@ const getCategories = async (req, res) => {
 // @route   POST /api/categories
 // @access  Private
 const createCategory = async (req, res) => {
-  const { name, slug, icon, description, order } = req.body;
+  const { name, slug, icon, description, order, specifications } = req.body;
 
   try {
     const categoryExists = await Category.findOne({ slug });
@@ -35,6 +35,7 @@ const createCategory = async (req, res) => {
       icon,
       description,
       order: order || 0,
+      specifications: specifications || [],
     });
 
     const createdCategory = await category.save();
@@ -48,7 +49,7 @@ const createCategory = async (req, res) => {
 // @route   PUT /api/categories/:id
 // @access  Private
 const updateCategory = async (req, res) => {
-  const { name, slug, icon, description, order } = req.body;
+  const { name, slug, icon, description, order, specifications } = req.body;
 
   try {
     const category = await Category.findById(req.params.id);
@@ -59,6 +60,9 @@ const updateCategory = async (req, res) => {
       category.icon = icon !== undefined ? icon : category.icon;
       category.description = description !== undefined ? description : category.description;
       category.order = order !== undefined ? order : category.order;
+      if (specifications !== undefined) {
+        category.specifications = specifications;
+      }
 
       const updatedCategory = await category.save();
       res.json(updatedCategory);

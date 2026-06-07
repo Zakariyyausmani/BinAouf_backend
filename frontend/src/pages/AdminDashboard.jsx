@@ -227,6 +227,219 @@ const QuotesPanel = () => {
   );
 };
 
+// ─── Sub-Panel: Categories ──────────────────────────────────────────────────────
+const CategoriesPanel = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: '', slug: '', icon: '', description: '', order: 0, specifications: [] });
+
+  const fetchData = async () => {
+    try {
+      const res = await API.get('/categories');
+      setCategories(res.data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name: '', slug: '', icon: '', description: '', order: 0, specifications: [] });
+    setShowForm(true);
+  };
+
+  const openEdit = (c) => {
+    setEditing(c);
+    setForm({
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon || '',
+      description: c.description || '',
+      order: c.order || 0,
+      specifications: c.specifications || [],
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editing) {
+        await API.put(`/categories/${editing._id}`, form);
+      } else {
+        await API.post('/categories', form);
+      }
+      await fetchData();
+      setShowForm(false);
+    } catch (e) { alert(e.response?.data?.message || 'Save failed'); }
+  };
+
+  const deleteCategory = async (id) => {
+    if (!window.confirm('Delete this category? Cannot be undone and will fail if products use it.')) return;
+    try { await API.delete(`/categories/${id}`); setCategories(prev => prev.filter(c => c._id !== id)); }
+    catch (e) { alert(e.response?.data?.message || 'Delete failed'); }
+  };
+
+  const addSpecRow = () => {
+    setForm(prev => ({
+      ...prev,
+      specifications: [...prev.specifications, { name: '', weight: '', size: '', packing: '' }]
+    }));
+  };
+
+  const removeSpecRow = (idx) => {
+    setForm(prev => ({
+      ...prev,
+      specifications: prev.specifications.filter((_, i) => i !== idx)
+    }));
+  };
+
+  const updateSpecRow = (idx, field, value) => {
+    setForm(prev => {
+      const newSpecs = [...prev.specifications];
+      newSpecs[idx] = { ...newSpecs[idx], [field]: value };
+      return { ...prev, specifications: newSpecs };
+    });
+  };
+
+  if (loading) return <div style={{ padding: '40px', color: 'var(--muted)' }}>Loading categories...</div>;
+
+  return (
+    <div>
+      {showForm && (
+        <div className="admin-modal-backdrop" onClick={() => setShowForm(false)}>
+          <div className="admin-modal" style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <span className="admin-modal-close" onClick={() => setShowForm(false)}>✕</span>
+            <h3 className="admin-modal-title">{editing ? 'Edit Category' : 'Add New Category'}</h3>
+            <div className="admin-form-grid">
+              <div className="admin-form-group">
+                <label>Category Name *</label>
+                <input value={form.name} onChange={e => {
+                  const val = e.target.value;
+                  // Auto-generate slug if it's a new category
+                  if (!editing) {
+                    setForm(p => ({ ...p, name: val, slug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-') }));
+                  } else {
+                    setForm(p => ({ ...p, name: val }));
+                  }
+                }} placeholder="e.g. Edible Salt" />
+              </div>
+              <div className="admin-form-group">
+                <label>URL Slug *</label>
+                <input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} placeholder="e.g. edible-salt" />
+              </div>
+              <div className="admin-form-group">
+                <label>Icon Emoji</label>
+                <input value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))} placeholder="🧂" />
+              </div>
+              <div className="admin-form-group">
+                <label>Display Order</label>
+                <input type="number" value={form.order} onChange={e => setForm(p => ({ ...p, order: parseInt(e.target.value) || 0 }))} />
+              </div>
+              <div className="admin-form-group" style={{ gridColumn: '1/-1' }}>
+                <label>Description</label>
+                <textarea style={{ height: '60px', resize: 'vertical', borderRadius: '6px', border: '1.5px solid var(--gray-border)', padding: '10px 14px', width: '100%', fontFamily: 'inherit' }}
+                  value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+              </div>
+              
+              <div style={{ gridColumn: '1/-1', marginTop: '20px', borderTop: '1px solid var(--gray-border)', paddingTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <label style={{ margin: 0 }}>Specifications Table (Logistics)</label>
+                  <button className="admin-action-btn edit" onClick={addSpecRow} style={{ padding: '6px 12px', fontSize: '12px' }}>+ Add Row</button>
+                </div>
+                
+                {form.specifications.length === 0 ? (
+                  <div style={{ padding: '20px', background: 'var(--cream2)', borderRadius: '8px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                    No specification rows added. This category won't display a logistics table.
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="admin-table" style={{ background: 'white' }}>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Weight (kg)</th>
+                          <th>Size (cm)</th>
+                          <th>Packing</th>
+                          <th style={{ width: '50px' }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {form.specifications.map((spec, idx) => (
+                          <tr key={idx}>
+                            <td style={{ padding: '8px' }}>
+                              <input value={spec.name} onChange={e => updateSpecRow(idx, 'name', e.target.value)} style={{ padding: '6px', border: '1px solid #ddd', width: '100%', borderRadius: '4px' }} placeholder="Square" />
+                            </td>
+                            <td style={{ padding: '8px' }}>
+                              <input value={spec.weight} onChange={e => updateSpecRow(idx, 'weight', e.target.value)} style={{ padding: '6px', border: '1px solid #ddd', width: '100%', borderRadius: '4px' }} placeholder="1.2" />
+                            </td>
+                            <td style={{ padding: '8px' }}>
+                              <input value={spec.size} onChange={e => updateSpecRow(idx, 'size', e.target.value)} style={{ padding: '6px', border: '1px solid #ddd', width: '100%', borderRadius: '4px' }} placeholder="10 x 11" />
+                            </td>
+                            <td style={{ padding: '8px' }}>
+                              <input value={spec.packing} onChange={e => updateSpecRow(idx, 'packing', e.target.value)} style={{ padding: '6px', border: '1px solid #ddd', width: '100%', borderRadius: '4px' }} placeholder="12 pcs" />
+                            </td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <button onClick={() => removeSpecRow(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', marginTop: '30px', justifyContent: 'flex-end' }}>
+              <button className="admin-action-btn view" onClick={() => setShowForm(false)}>Cancel</button>
+              <button className="admin-action-btn edit" onClick={handleSave}>{editing ? 'Save Category' : 'Add Category'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-panel-card">
+        <div className="card-header-flex">
+          <h3 className="card-title-sub">Categories ({categories.length})</h3>
+          <button className="admin-action-btn edit" onClick={openNew}>+ Add Category</button>
+        </div>
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Icon</th>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Order</th>
+                <th>Specs Rows</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map(c => (
+                <tr key={c._id}>
+                  <td style={{ fontSize: '20px' }}>{c.icon || '—'}</td>
+                  <td style={{ fontWeight: 500 }}>{c.name}</td>
+                  <td style={{ color: 'var(--muted)', fontSize: '13px' }}>{c.slug}</td>
+                  <td>{c.order}</td>
+                  <td>{(c.specifications && c.specifications.length) || 0} rows</td>
+                  <td>
+                    <button className="admin-action-btn edit" onClick={() => openEdit(c)}>✏️ Edit</button>
+                    <button className="admin-action-btn delete" onClick={() => deleteCategory(c._id)}>🗑</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Sub-Panel: Products ──────────────────────────────────────────────────────
 const ProductsPanel = () => {
   const [categories, setCategories] = useState([]);
@@ -727,6 +940,7 @@ const AdminDashboard = () => {
   const navItems = [
     { id: 'overview', icon: '📊', label: 'Overview' },
     { id: 'quotes', icon: '📋', label: 'Quote Requests' },
+    { id: 'categories', icon: '🗂️', label: 'Categories' },
     { id: 'products', icon: '🧂', label: 'Products' },
     { id: 'testimonials', icon: '⭐', label: 'Testimonials' },
     { id: 'settings', icon: '⚙️', label: 'Site Settings' },
@@ -793,6 +1007,7 @@ const AdminDashboard = () => {
 
         {activePanel === 'overview'      && <Overview />}
         {activePanel === 'quotes'        && <QuotesPanel />}
+        {activePanel === 'categories'    && <CategoriesPanel />}
         {activePanel === 'products'      && <ProductsPanel />}
         {activePanel === 'testimonials'  && <TestimonialsPanel />}
         {activePanel === 'settings'      && <SettingsPanel />}

@@ -37,26 +37,14 @@ const Products = () => {
     const tabParam = params.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
-      // Wait for DOM to render, then scroll to section
-      setTimeout(() => {
-        const element = document.getElementById(tabParam);
-        if (element) {
-          const navOffset = 130; // Navbar + TabBar height
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - navOffset;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      }, 300);
     }
   }, [location.search, categories]);
 
   const handleTabClick = (slug) => {
     setActiveTab(slug);
     navigate(`/products?tab=${slug}`, { replace: true });
+    // Scroll to top of catalog section smoothly
+    window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
   const handleGetQuote = (productName) => {
@@ -84,6 +72,10 @@ const Products = () => {
   ];
 
   const displayedCategories = categories.length > 0 ? categories : defaultCategories;
+  
+  // Find the currently active category
+  const currentCategory = displayedCategories.find(cat => cat.slug === activeTab) || displayedCategories[0];
+  const categoryProducts = currentCategory ? getProductsByCategory(currentCategory._id) : [];
 
   return (
     <div>
@@ -114,65 +106,70 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Categories Sections */}
-      <div className="catalog-sections">
-        {displayedCategories.map((cat) => {
-          const categoryProducts = getProductsByCategory(cat._id);
-          
-          return (
-            <section
-              key={cat._id}
-              id={cat.slug}
-              className="prod-section"
-            >
-              <div className="prod-section-header">
-                <div className="psh-left">
-                  <div className="tag">{cat.icon} Category Range</div>
-                  <h2 className="sec-title">{cat.name}</h2>
-                  <p>{cat.description || 'Natural mineral products, selected and refined for optimal purity.'}</p>
-                </div>
-                <div className="psh-right">
-                  <h5>Logistics Specifications</h5>
-                  <div className="psh-specs">
-                    <div className="psh-spec">
-                      <span className="psh-spec-label">Purity:</span>
-                      <span className="psh-spec-val">98% - 99% NaCl</span>
-                    </div>
-                    <div className="psh-spec">
-                      <span className="psh-spec-label">Source location:</span>
-                      <span className="psh-spec-val">Warcha / Khewra Mines</span>
-                    </div>
-                    <div className="psh-spec">
-                      <span className="psh-spec-label">Certifications:</span>
-                      <span className="psh-spec-val">ISO 22000, Halal, FDA</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Categories Sections (Only active category shown) */}
+      <div className="catalog-sections" style={{ minHeight: '60vh' }}>
+        {currentCategory && (
+          <section
+            id={currentCategory.slug}
+            className="prod-section"
+            style={{ animation: 'fadeIn 0.5s ease-in-out' }}
+          >
+            <div className="prod-section-header" style={{ display: 'block', textAlign: 'center' }}>
+              <div className="tag" style={{ margin: '0 auto 10px' }}>{currentCategory.icon} Category Range</div>
+              <h2 className="sec-title">{currentCategory.name}</h2>
+              <p style={{ maxWidth: '800px', margin: '0 auto' }}>{currentCategory.description || 'Natural mineral products, selected and refined for optimal purity.'}</p>
+            </div>
 
-              {/* Products Grid */}
-              <div className="prod-items-grid">
-                {categoryProducts.length > 0 ? (
-                  categoryProducts.map((prod) => (
-                    <ProductCard
-                      key={prod._id}
-                      product={prod}
-                    />
-                  ))
-                ) : (
-                  <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
-                    No products loaded in this category yet. Run database seeder or add products in admin panel.
-                  </div>
-                )}
+            {/* Dynamic Specifications Table */}
+            {currentCategory.specifications && currentCategory.specifications.length > 0 && (
+              <div className="prod-spec-table-container" style={{ margin: '40px auto', maxWidth: '1000px', overflowX: 'auto', background: 'white', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                  <thead>
+                    <tr style={{ background: '#666', color: 'white' }}>
+                      <th style={{ padding: '16px', fontWeight: 600, borderBottom: '2px solid #555' }}>Sr #</th>
+                      <th style={{ padding: '16px', fontWeight: 600, borderBottom: '2px solid #555' }}>Name</th>
+                      <th style={{ padding: '16px', fontWeight: 600, borderBottom: '2px solid #555' }}>Weight (kg)</th>
+                      <th style={{ padding: '16px', fontWeight: 600, borderBottom: '2px solid #555' }}>Size (cm)</th>
+                      <th style={{ padding: '16px', fontWeight: 600, borderBottom: '2px solid #555' }}>Packing</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentCategory.specifications.map((spec, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #eee', background: idx % 2 === 0 ? '#fff' : '#fcfcfc' }}>
+                        <td style={{ padding: '16px', color: '#555' }}>{String(idx + 1).padStart(2, '0')}</td>
+                        <td style={{ padding: '16px', fontWeight: 500, color: '#333' }}>{spec.name}</td>
+                        <td style={{ padding: '16px', color: '#555' }}>{spec.weight}</td>
+                        <td style={{ padding: '16px', color: '#555' }}>{spec.size}</td>
+                        <td style={{ padding: '16px', color: '#555' }}>{spec.packing}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            )}
 
-              {/* Package Details Bar */}
-              <div style={{ marginTop: '50px' }}>
-                <ProductPackBar categorySlug={cat.slug} />
-              </div>
-            </section>
-          );
-        })}
+            {/* Products Grid */}
+            <div className="prod-items-grid">
+              {categoryProducts.length > 0 ? (
+                categoryProducts.map((prod) => (
+                  <ProductCard
+                    key={prod._id}
+                    product={prod}
+                  />
+                ))
+              ) : (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
+                  No products loaded in this category yet. Run database seeder or add products in admin panel.
+                </div>
+              )}
+            </div>
+
+            {/* Package Details Bar */}
+            <div style={{ marginTop: '50px' }}>
+              <ProductPackBar categorySlug={currentCategory.slug} />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

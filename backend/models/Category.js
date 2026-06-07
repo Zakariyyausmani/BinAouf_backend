@@ -25,6 +25,14 @@ const categorySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    specifications: [
+      {
+        name: { type: String, required: true },
+        weight: { type: String, required: true },
+        size: { type: String, required: true },
+        packing: { type: String, required: true },
+      }
+    ],
   },
   {
     timestamps: true,
