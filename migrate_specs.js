@@ -1,27 +1,32 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Category = require('./models/Category');
 
 async function migrate() {
   await mongoose.connect(process.env.MONGODB_URI);
-
   console.log('Connected to MongoDB');
 
-  const categories = await Category.find();
+  const categoriesCol = mongoose.connection.db.collection('categories');
+  const categories = await categoriesCol.find({}).toArray();
+
   for (let cat of categories) {
     if (Array.isArray(cat.specifications) && cat.specifications.length > 0 && cat.specifications[0].name) {
-      // It's the old format
-      const oldSpecs = cat.specifications;
+      console.log(`Migrating specs for category: ${cat.name}`);
       const headers = ["Name", "Weight (kg)", "Size (cm)", "Packing"];
-      const rows = oldSpecs.map(s => [s.name, s.weight, s.size, s.packing]);
+      const rows = cat.specifications.map(s => [s.name, s.weight, s.size, s.packing]);
       
-      cat.specifications = { headers, rows };
-      await cat.save();
+      await categoriesCol.updateOne(
+        { _id: cat._id },
+        { $set: { specifications: { headers, rows } } }
+      );
       console.log(`Migrated specs for category: ${cat.name}`);
     } else if (!cat.specifications || (Array.isArray(cat.specifications) && cat.specifications.length === 0)) {
-       cat.specifications = { headers: ["Name", "Weight (kg)", "Size (cm)", "Packing"], rows: [] };
-       await cat.save();
+       await categoriesCol.updateOne(
+        { _id: cat._id },
+        { $set: { specifications: { headers: ["Name", "Weight (kg)", "Size (cm)", "Packing"], rows: [] } } }
+       );
        console.log(`Initialized empty specs for category: ${cat.name}`);
+    } else {
+       console.log(`Category ${cat.name} already in new format.`);
     }
   }
 

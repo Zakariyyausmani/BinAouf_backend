@@ -53,6 +53,8 @@ app.use('/api/quotes', quoteRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/faqs', require('./routes/faqRoutes'));
+app.use('/api/pages', require('./routes/pageContentRoutes'));
 
 // Static folder for images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
