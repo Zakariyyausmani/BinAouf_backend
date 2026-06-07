@@ -22,22 +22,26 @@ connectDB();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// ----- CORS configuration ---------------------------------------------------
+// Load the allowed origin from .env (fallback to the frontend URL for safety)
+const allowedOrigin = process.env.CORS_ORIGIN || 'https://bin-aouf-frontend.vercel.app';
 
-// -----------------------------------------------------------------
-// Explicit CORS headers for Vercel deployment
-// Adjust the origin if the frontend URL changes
-const FRONTEND_ORIGIN = 'https://bin-aouf-frontend.vercel.app';
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Define options for the cors middleware
+const corsOptions = {
+  origin: (origin, callback) => {
+    // For non-browser requests (e.g., Postman) origin may be undefined
+    if (!origin) return callback(null, true);
+    // Allow the exact whitelisted origin
+    if (origin === allowedOrigin) return callback(null, true);
+    // Otherwise reject
+    const msg = `Origin ${origin} not allowed by CORS`;
+    return callback(new Error(msg), false);
+  },
+  credentials: true, // if you need to send cookies / auth headers
+};
+
+// Apply the middleware
+app.use(cors(corsOptions));
 // -----------------------------------------------------------------
 app.use(express.json());
 
